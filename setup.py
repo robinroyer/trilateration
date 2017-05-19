@@ -3,8 +3,8 @@ from setuptools import setup
 setup(
   name = 'trilateration',
   packages = ['trilateration'],
-  version = '0.1',
-  description = 'Lib to find TDOA / TOA best solution from 3 circle',
+  version = '1.0',
+  description = 'Finding best intersection or its nearest point for 3 gateways and the distance traveled by the signal for TDOA/TOA trilateration',
   author = 'Royer Robin',
   author_email = 'ktyroby@hotmail.fr',
   url = 'https://github.com/robinroyer/trilateration',
