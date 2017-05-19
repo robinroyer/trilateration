@@ -238,7 +238,7 @@ if __name__ == '__main__':
     c3 = circle(point(48.80, 2.30), 350)
 
     trilat = trilateration([c1, c2, c3])
-    print trilat.geolocalized_device
+    print trilat.geolocalized_device.__str__() == "Point ->\n\tlatitude: 48.826717, longitude: 2.286731"
 
 
 
