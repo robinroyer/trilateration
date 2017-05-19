@@ -34,6 +34,12 @@ Basically we have several cases:
 
 EARTH_RADIUS = 6378100.0
 
+# utils
+def is_number(to_test):
+    return isinstance(to_test, float) \
+        or isinstance(to_test, int) \
+        or isinstance(to_test, long)
+
 class projection:
     def __init__(self, a_projection='epsg:2192'):
         self.projection = pyproj.Proj(init=a_projection)
@@ -71,9 +77,12 @@ class point:
     """
 
     def __init__(self, lat, lon):
-        # raise ValueError("save must be True if recurse is True")
-        self.lat = lat
-        self.lon = lon
+        if not is_number(lon) or lon > 180 or lon < -180:
+            raise ValueError("Incorrect longitude")
+        if not is_number(lat) or lat > 90 or lat < -90:
+            raise ValueError("Incorrect latitude")
+        self.lat = float(lat)
+        self.lon = float(lon)
 
     def __str__(self):
         return "Point ->\n\tlatitude: %f, longitude: %f" % (self.lat, self.lon)
@@ -107,9 +116,13 @@ class circle:
     """
     Doc
     """
-    def __init__(self, point, radius):
-        self.center = point
-        self.radius = radius
+    def __init__(self, a_point, radius):
+        if not isinstance(a_point, point):
+            raise ValueError("Incorrect point")
+        if not is_number(radius) or radius < 0:
+            raise ValueError("Incorrect circle radius")
+        self.center = a_point
+        self.radius = float(radius)
 
     def __str__(self):
         return "Circle ->\n\tradius: %f\n\tcenter => latitude: %f, longitude: %f" % (self.center.lat, self.center.lon, self.radius)
@@ -146,8 +159,7 @@ class circle:
 
 
         # Check if we approximate intersection or not
-        if not self.does_intersect(a_circle) and self.does_contain(a_circle):
-            self.is_approximation = True
+        approximation = not self.does_intersect(a_circle) or self.does_contain(a_circle)
 
         #  ============================================================= COMPUTE 
         # projection over x, y
@@ -162,84 +174,85 @@ class circle:
 
         res = solve( equations, x, y)
 
-        if len(res) == 2:
+        if not isinstance(res[0], tuple): # no result point
+            return None, None, approximation
+        elif len(res) == 2:
             lo1, la1 = proj.x_y_to_long_lat(complex(res[0][0]).real, complex(res[0][1]).real)
             lo2, la2 = proj.x_y_to_long_lat(complex(res[1][0]).real, complex(res[1][1]).real)
-            return point(la1, lo1), point(la2, lo2)
+            return point(la1, lo1), point(la2, lo2), approximation
         else:
             lo1, la1 = proj.x_y_to_long_lat(complex(res[0][0]).real, complex(res[0][1]).real)
-            return point(la1, lo1), point(la2, lo2)
+            return point(la1, lo1), point(la2, lo2), approximation
 
 
 
 class trilateration:
     """
     This class handle all the trilateration process
-    # please choose tour projection  http://spatialreference.org/ref/epsg/2192/
+    please choose your projection  http://spatialreference.org/ref/epsg/2192/
     """
 
     def __init__(self, circles_list, projection_system='epsg:2192'):
         """
         Doc
         """
+        if not isinstance(circles_list, list) or len(circles_list) != 3:
+            raise ValueError("Incorrect 3-circle list")
+        if not isinstance(projection_system, str):
+            raise ValueError("Incorrect projection_system")
+        for a_circle in circles_list:
+            if not isinstance(a_circle, circle):
+                raise ValueError("Invalid item in circles_list is not a circle")
+
         # PUBLIC
         self.geolocalized_device = None
         self.is_approximation = False
 
         # PRIVATE
-        self.__circles = circles_list
-        self.__level = len(circles_list)
-        self.__circles_intersections = []
-        self.__proj = projection(projection_system)
+        self._circles = circles_list
+        self._level = len(circles_list)
+        self._circles_intersections = []
+        self._proj = projection(projection_system)
         
         # compute the trilateration
-        self.__compute_intersections()
-        self.__compute_geolocalization()
+        self._compute_intersections()
+        self._compute_geolocalization()
 
 
-    def __compute_intersections(self):
+    def _compute_intersections(self):
         """
         generate all the intersections between circles (estimated or not)
         """
-        if self.__level == 0:
-            return 0 # throw error -> we are no magicians
-        if self.__level == 1:
-            return 0 # throw error -> we are no magicians
-        if self.__level == 2:
-            return 0 # throw error -> we are no magicians
+        for i, circle in enumerate(self._circles):
+            for j in xrange(i + 1, len(self._circles)):
+                inter1, inter2, approximation = circle.intersection_with_circle(self._circles[j], self._proj)
+                if inter1 is not None and inter2 is not None:
+                    self._circles_intersections.append(inter1)
+                    self._circles_intersections.append(inter2)
+                if approximation:
+                    self.is_approximation = True
 
-        for i, circle in enumerate(self.__circles):
-            for j in xrange(i + 1, len(self.__circles)):
-                inter1, inter2 = circle.intersection_with_circle(self.__circles[j], self.__proj)
-                self.__circles_intersections.append(inter1)
-                self.__circles_intersections.append(inter2)
-
-    def __compute_geolocalization(self):
+    def _compute_geolocalization(self):
         """
         Generate the mean point corresponding to the device estimated localization
         """
         mean_lat, mean_lon = .0, .0
-        for intersection in self.__circles_intersections:
+        for intersection in self._circles_intersections:
             mean_lat += intersection.lat
             mean_lon += intersection.lon
 
-        mean_lat /= float(len(self.__circles_intersections))
-        mean_lon /= float(len(self.__circles_intersections))
+        mean_lat /= float(len(self._circles_intersections))
+        mean_lon /= float(len(self._circles_intersections))
 
         self.geolocalized_device = point(mean_lat, mean_lon)
-
-
 
 
 # Test the lib
 if __name__ == '__main__':
     c1 = circle(point(48.84, 2.26), 3000)
-    c2 = circle(point(48.84, 2.30), 5)
+    c2 = circle(point(48.84, 2.30), 5000)
     c3 = circle(point(48.80, 2.30), 3500)
 
     trilat = trilateration([c1, c2, c3])
     print trilat.geolocalized_device
-
-
-
 
