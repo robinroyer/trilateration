@@ -89,8 +89,8 @@ class point:
             great circle distance between the 2 circle center
         """
 
-        if not isinstance(aPoint, point):
-            return 0 # throw error
+        # if not isinstance(aPoint, point):
+        #     return 0 # throw error
 
         # convert decimal degrees to radians
         lon1, lat1, lon2, lat2 = map(math.radians, [self.lon, self.lat, aPoint.lon, aPoint.lat])
@@ -113,13 +113,23 @@ class circle:
     def __str__(self):
         return "Circle ->\n\tradius: %f\n\tcenter => latitude: %f, longitude: %f" % (self.center.lat, self.center.lon, self.radius)
 
+
+    def does_intersect(self, a_circle):
+        return self.radius + a_circle.radius >= self.center.distance_from_point(a_circle.center)
+
+
+    def does_contain(self, a_circle):
+        return not self.does_intersect(a_circle) and \
+        max(self.radius, a_circle.radius) < self.center.distance_from_point(a_circle.center)
+
+
     def distance_from_circle_center(self, a_circle):
         """
         return the distance between the center of the 2 circles
         """
-        if not isinstance(a_circle, circle):
-            return 0 # throw error
-        return 0#self.center.distance_from_point(a_circle.center)
+        # if not isinstance(a_circle, circle):
+        #     return 0 # throw error
+        return self.center.distance_from_point(a_circle.center)
 
 
     def intersection_with_circle(self, a_circle, proj=projection()):
@@ -133,31 +143,32 @@ class circle:
         # if self.distance_from_circle_center(a_circle) == 0:
         #     return point(.0, .0), point(.0, .0) # throw error
 
-        distance = self.distance_from_circle_center(a_circle)
-        # check circle condition
-        does_intersect = self.radius + a_circle.radius >= distance
-        does_contain = not does_intersect and max(self.radius, a_circle.radius) < distance
-
-        print does_intersect
-        print does_contain
 
 
-        if does_intersect and not does_contain:
-            # projection over x, y
-            self_x, self_y = proj.lat_long_to_x_y(self.center.lat, self.center.lon)
-            a_circle_x, a_circle_y = proj.lat_long_to_x_y(a_circle.center.lat, a_circle.center.lon)
-            # compute intersections
-            x, y = Symbol('x'), Symbol('y')
+        #  ============================================================= COMPUTE 
+        # projection over x, y
+        self_x, self_y = proj.lat_long_to_x_y(self.center.lat, self.center.lon)
+        a_circle_x, a_circle_y = proj.lat_long_to_x_y(a_circle.center.lat, a_circle.center.lon)
+        # symbole for equation
+        x, y = Symbol('x'), Symbol('y')
 
-            equations = []
-            equations.append((self_x - x)**2 + (self_y - y)**2  - self.radius**2 )
-            equations.append((a_circle_x - x)**2 + (a_circle_y - y)**2  - a_circle.radius**2 )
+        equations = []
+        equations.append((self_x - x)**2 + (self_y - y)**2  - self.radius**2 )
+        equations.append((a_circle_x - x)**2 + (a_circle_y - y)**2  - a_circle.radius**2 )
 
-            res = solve( equations, x, y)
+        res = solve( equations, x, y)
+        print res
 
-            print res
+        if len(res) == 2:
+            lo1, la1 = proj.x_y_to_long_lat(res[0][0], res[0][1])
+            lo2, la2 = proj.x_y_to_long_lat(res[1][0], res[1][1])
+            return point(la1, lo1), point(la2, lo2)
+        else:
+            lo1, la1 = proj.x_y_to_long_lat(res[0][0], res[0][1])
+            return point(la1, lo1), point(la2, lo2)
+
+        if self.does_intersect(a_circle) and not self.does_contain(a_circle):
             return point(.0, .0), point(.0, .0)
-            pass
         else: # one circle contain the other or they are too far away from each other
             self.is_approximation = True
             # generate fake intersections
@@ -226,11 +237,12 @@ class trilateration:
 # Test the lib
 if __name__ == '__main__':
 
-    c1 = circle(point(0,0), 1)
-    c2 = circle(point(2,0), 1)
-    c3 = circle(point(1,1), 1)
+    c1 = circle(point(48.84, 2.26), 3000)
+    c2 = circle(point(48.84, 2.30), 2500)
+    c3 = circle(point(48.80, 2.30), 3500)
 
     trilat = trilateration([c1, c2, c3])
+    print trilat.geolocalized_device
 
 
 
