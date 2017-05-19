@@ -71,6 +71,7 @@ class point:
     """
 
     def __init__(self, lat, lon):
+        # raise ValueError("save must be True if recurse is True")
         self.lat = lat
         self.lon = lon
 
@@ -232,13 +233,12 @@ class trilateration:
 
 # Test the lib
 if __name__ == '__main__':
-
-    c1 = circle(point(48.84, 2.26), 300)
+    c1 = circle(point(48.84, 2.26), 3000)
     c2 = circle(point(48.84, 2.30), 5)
-    c3 = circle(point(48.80, 2.30), 350)
+    c3 = circle(point(48.80, 2.30), 3500)
 
     trilat = trilateration([c1, c2, c3])
-    print trilat.geolocalized_device.__str__() == "Point ->\n\tlatitude: 48.826717, longitude: 2.286731"
+    print trilat.geolocalized_device
 
 
 
