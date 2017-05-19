@@ -2,6 +2,10 @@
 # -*- coding:utf-8 -*-
 
 import math
+import pyproj
+from sympy import Symbol
+from sympy.solvers import solve
+
 
 """
 The aim of this lib is to compute the intersection of 3 circles by trilateration.
@@ -30,9 +34,38 @@ Basically we have several cases:
 
 EARTH_RADIUS = 6378100.0
 
+class projection:
+    def __init__(self, a_projection='epsg:2192'):
+        self.projection = pyproj.Proj(init=a_projection)
+
+    def lat_long_to_x_y(self, lat, lon):
+        """
+        Transform a latitude, longitude point to as x, y point
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+
+        Returns:
+            (x, y)
+        """
+        return self.projection(lon, lat)
+
+    def x_y_to_long_lat(self, x, y):
+        """
+        Transform a point x, y to a longitude, latitude point
+
+        Args:
+            x: x
+            y: y
+
+        Returns:
+            (Longitude, Latitude)
+        """
+        return self.projection(x, y, inverse=True)
 
 
-class point(object):
+class point:
     """
     Doc
     """
@@ -41,21 +74,22 @@ class point(object):
         self.lat = lat
         self.lon = lon
 
-    def distance_from_point(aPoint):
+    def __str__(self):
+        return "Point ->\n\tlatitude: %f, longitude: %f" % (self.lat, self.lon)
+
+    def distance_from_point(self, aPoint):
         """
         Calculate the great circle distance between two points 
         on the earth (specified in decimal degrees)
 
         Args:
-            lat1: Latitude of the 1st point
-            lon1: Longitude of the 1st point
-            lat2: Latitude of the 2nd point
-            lon2: Longitude of the 2nd point
+            aPoint: Point to compute the distance from
 
         Returns:
-            great circle distance
+            great circle distance between the 2 circle center
         """
-        if not isintance(aPoint, point):
+
+        if not isinstance(aPoint, point):
             return 0 # throw error
 
         # convert decimal degrees to radians
@@ -68,7 +102,7 @@ class point(object):
         return EARTH_RADIUS * c
 
 
-class circle(object):
+class circle:
     """
     Doc
     """
@@ -76,71 +110,79 @@ class circle(object):
         self.center = point
         self.radius = radius
 
-    def distance_from_circle_center(self, aCircle):
+    def __str__(self):
+        return "Circle ->\n\tradius: %f\n\tcenter => latitude: %f, longitude: %f" % (self.center.lat, self.center.lon, self.radius)
+
+    def distance_from_circle_center(self, a_circle):
         """
         return the distance between the center of the 2 circles
         """
-        if not isintance(aCircle, circle):
+        if not isinstance(a_circle, circle):
             return 0 # throw error
-        return self.center.distance_from_point(aCircle.center)
+        return 0#self.center.distance_from_point(a_circle.center)
 
 
-    def intersection_with_circle(self, aCircle):
+    def intersection_with_circle(self, a_circle, proj=projection()):
         """
         return 2 points as intersection of the 2 circles
         the last return parameters shows if there is a real intersection
             or if it is fake intersection points
         """
-        if not isintance(aCircle, circle):
-            return 0 # throw error
+        # if not isinstance(a_circle, circle):
+        #     return point(.0, .0), point(.0, .0) # throw error
+        # if self.distance_from_circle_center(a_circle) == 0:
+        #     return point(.0, .0), point(.0, .0) # throw error
 
-        does_intersect = self.radius + circle.radius >= self.distance_from_circle_center(aCircle)
-        if does_intersect:
-            # look for intersections
-            """
-                p1 = c1.center 
-                p2 = c2.center
-                r1 = c1.radius
-                r2 = c2.radius
+        distance = self.distance_from_circle_center(a_circle)
+        # check circle condition
+        does_intersect = self.radius + a_circle.radius >= distance
+        does_contain = not does_intersect and max(self.radius, a_circle.radius) < distance
 
-                d = get_two_points_distance(p1, p2)
-                # if to far away, or self contained - can't be done
-                if d >= (r1 + r2) or d <= math.fabs(r1 -r2):
-                    return None
+        print does_intersect
+        print does_contain
 
-                a = (pow(r1, 2) - pow(r2, 2) + pow(d, 2)) / (2*d)
-                h  = math.sqrt(pow(r1, 2) - pow(a, 2))
-                x0 = p1.x + a*(p2.x - p1.x)/d 
-                y0 = p1.y + a*(p2.y - p1.y)/d
-                rx = -(p2.y - p1.y) * (h/d)
-                ry = -(p2.x - p1.x) * (h / d)
-                return [point(x0+rx, y0-ry), point(x0-rx, y0+ry)]
-            """
+
+        if does_intersect and not does_contain:
+            # projection over x, y
+            self_x, self_y = proj.lat_long_to_x_y(self.center.lat, self.center.lon)
+            a_circle_x, a_circle_y = proj.lat_long_to_x_y(a_circle.center.lat, a_circle.center.lon)
+            # compute intersections
+            x, y = Symbol('x'), Symbol('y')
+
+            equations = []
+            equations.append((self_x - x)**2 + (self_y - y)**2  - self.radius**2 )
+            equations.append((a_circle_x - x)**2 + (a_circle_y - y)**2  - a_circle.radius**2 )
+
+            res = solve( equations, x, y)
+
+            print res
+            return point(.0, .0), point(.0, .0)
             pass
-        else:
+        else: # one circle contain the other or they are too far away from each other
             self.is_approximation = True
             # generate fake intersections
-            pass
+            return point(.0, .0), point(.0, .0)
 
 
 class trilateration:
     """
-    Doc
+    This class handle all the trilateration process
+    # please choose tour projection  http://spatialreference.org/ref/epsg/2192/
     """
 
-    def __init__(self, circlesList):
+    def __init__(self, circles_list, projection_system='epsg:2192'):
         """
         Doc
         """
-
         # PUBLIC
         self.geolocalized_device = None
         self.is_approximation = False
 
         # PRIVATE
-        self.__circles = circlesList
-        self.__level = len(circlesList)
+        self.__circles = circles_list
+        self.__level = len(circles_list)
         self.__circles_intersections = []
+        self.__proj = projection(projection_system)
         
         # compute the trilateration
         self.__compute_intersections()
@@ -149,7 +191,7 @@ class trilateration:
 
     def __compute_intersections(self):
         """
-        generate all the intersections
+        generate all the intersections between circles (estimated or not)
         """
         if self.__level == 0:
             return 0 # throw error -> we are no magicians
@@ -158,16 +200,15 @@ class trilateration:
         if self.__level == 2:
             return 0 # throw error -> we are no magicians
 
-        self.__circles_intersections = []
         for i, circle in enumerate(self.__circles):
-            for j in xrange(i + 1, len(self.__circles))
-                inter1, inter2 = circle.intersection_with_circle(self.__circles[j])
+            for j in xrange(i + 1, len(self.__circles)):
+                inter1, inter2 = circle.intersection_with_circle(self.__circles[j], self.__proj)
                 self.__circles_intersections.append(inter1)
                 self.__circles_intersections.append(inter2)
 
     def __compute_geolocalization(self):
         """
-        Doc
+        Generate the mean point corresponding to the device estimated localization
         """
         mean_lat, mean_lon = .0, .0
         for intersection in self.__circles_intersections:
@@ -178,4 +219,19 @@ class trilateration:
         mean_lon /= float(len(self.__circles_intersections))
 
         self.geolocalized_device = point(mean_lat, mean_lon)
+
+
+
+
+# Test the lib
+if __name__ == '__main__':
+
+    c1 = circle(point(0,0), 1)
+    c2 = circle(point(2,0), 1)
+    c3 = circle(point(1,1), 1)
+
+    trilat = trilateration([c1, c2, c3])
+
+
+
 
