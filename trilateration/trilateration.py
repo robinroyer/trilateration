@@ -144,6 +144,9 @@ class circle:
         #     return point(.0, .0), point(.0, .0) # throw error
 
 
+        # Check if we approximate intersection or not
+        if not self.does_intersect(a_circle) and self.does_contain(a_circle):
+            self.is_approximation = True
 
         #  ============================================================= COMPUTE 
         # projection over x, y
@@ -157,22 +160,15 @@ class circle:
         equations.append((a_circle_x - x)**2 + (a_circle_y - y)**2  - a_circle.radius**2 )
 
         res = solve( equations, x, y)
-        print res
 
         if len(res) == 2:
-            lo1, la1 = proj.x_y_to_long_lat(res[0][0], res[0][1])
-            lo2, la2 = proj.x_y_to_long_lat(res[1][0], res[1][1])
+            lo1, la1 = proj.x_y_to_long_lat(complex(res[0][0]).real, complex(res[0][1]).real)
+            lo2, la2 = proj.x_y_to_long_lat(complex(res[1][0]).real, complex(res[1][1]).real)
             return point(la1, lo1), point(la2, lo2)
         else:
-            lo1, la1 = proj.x_y_to_long_lat(res[0][0], res[0][1])
+            lo1, la1 = proj.x_y_to_long_lat(complex(res[0][0]).real, complex(res[0][1]).real)
             return point(la1, lo1), point(la2, lo2)
 
-        if self.does_intersect(a_circle) and not self.does_contain(a_circle):
-            return point(.0, .0), point(.0, .0)
-        else: # one circle contain the other or they are too far away from each other
-            self.is_approximation = True
-            # generate fake intersections
-            return point(.0, .0), point(.0, .0)
 
 
 class trilateration:
@@ -237,9 +233,9 @@ class trilateration:
 # Test the lib
 if __name__ == '__main__':
 
-    c1 = circle(point(48.84, 2.26), 3000)
-    c2 = circle(point(48.84, 2.30), 2500)
-    c3 = circle(point(48.80, 2.30), 3500)
+    c1 = circle(point(48.84, 2.26), 300)
+    c2 = circle(point(48.84, 2.30), 5)
+    c3 = circle(point(48.80, 2.30), 350)
 
     trilat = trilateration([c1, c2, c3])
     print trilat.geolocalized_device
