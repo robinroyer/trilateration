@@ -34,14 +34,39 @@ Basically we have several cases:
 
 EARTH_RADIUS = 6378100.0
 
-# utils
+
 def is_number(to_test):
+    """Check if an object is float, int or long.
+
+    Args:
+        object to test
+
+    Returns:
+        True if is is as float, int or long, False otherwise
+
+    """
     return isinstance(to_test, float) \
         or isinstance(to_test, int) \
         or isinstance(to_test, long)
 
 class projection:
+    """Check if an object is float, int or long.
+
+    Args:
+        object to test
+
+    Returns:
+        True if is is as float, int or long, False otherwise
+
+    """
+
     def __init__(self, a_projection='epsg:2192'):
+        """Check if an object is float, int or long.
+
+        Args:
+            a_projection string reprentation fo the projection system
+            see http://spatialreference.org/ref/epsg/2192/
+        """
         self.projection = pyproj.Proj(init=a_projection)
 
     def lat_long_to_x_y(self, lat, lon):
@@ -53,7 +78,7 @@ class projection:
             lon: Longitude
 
         Returns:
-            (x, y)
+            x, y representation
         """
         return self.projection(lon, lat)
 
@@ -66,17 +91,21 @@ class projection:
             y: y
 
         Returns:
-            (Longitude, Latitude)
+            Longitude, Latitude representation
         """
         return self.projection(x, y, inverse=True)
 
 
 class point:
-    """
-    Doc
-    """
+    """ Representation of a Latitude / Longitude point"""
 
     def __init__(self, lat, lon):
+        """Point constructor
+
+        Args:
+            lat: The latitude value.(-180 < lat < 180)
+            lon: The longitude vale.(-90 < lon < 90)
+        """
         if not is_number(lon) or lon > 180 or lon < -180:
             raise ValueError("Incorrect longitude")
         if not is_number(lat) or lat > 90 or lat < -90:
@@ -85,6 +114,7 @@ class point:
         self.lon = float(lon)
 
     def __str__(self):
+        """Overload __str__ for debug"""
         return "Point ->\n\tlatitude: %f, longitude: %f" % (self.lat, self.lon)
 
     def distance_from_point(self, aPoint):
@@ -99,8 +129,8 @@ class point:
             great circle distance between the 2 circle center
         """
 
-        # if not isinstance(aPoint, point):
-        #     return 0 # throw error
+        if not isinstance(aPoint, point):
+            raise ValueError("Parameter is not a point")
 
         # convert decimal degrees to radians
         lon1, lat1, lon2, lat2 = map(math.radians, [self.lon, self.lat, aPoint.lon, aPoint.lat])
@@ -113,10 +143,13 @@ class point:
 
 
 class circle:
-    """
-    Doc
-    """
+    """Reprensation of a geographic circle"""
     def __init__(self, a_point, radius):
+        """circle constructor
+        Args:
+            a_point: The center of the circle (should be a circle).
+            radius: The radius fo the circle (postif).
+        """
         if not isinstance(a_point, point):
             raise ValueError("Incorrect point")
         if not is_number(radius) or radius < 0:
@@ -125,38 +158,63 @@ class circle:
         self.radius = float(radius)
 
     def __str__(self):
+        """Overload __str__ for debug"""
         return "Circle ->\n\tradius: %f\n\tcenter => latitude: %f, longitude: %f" % (self.center.lat, self.center.lon, self.radius)
 
 
     def does_intersect(self, a_circle):
+        """Check if 2 circles have intersections.
+
+        Args:
+            a_circle: The other circle we shoud compare to self.
+
+        Returns:
+            True if there is interections. False otherwise
+        """
         return self.radius + a_circle.radius >= self.center.distance_from_point(a_circle.center)
 
 
     def does_contain(self, a_circle):
+        """Check one of the 2 circles contains the other one
+
+        Args:
+            a_circle: The other circle we shoud compare to self.
+
+        Returns:
+            True if the self or a_circle contains the other circle
+
+        """
         return not self.does_intersect(a_circle) and \
         max(self.radius, a_circle.radius) < self.center.distance_from_point(a_circle.center)
 
 
     def distance_from_circle_center(self, a_circle):
+        """Compute the distance between the center of self and the center the circle parameter
+
+        Args:
+            a_circle: The first parameter.
+
+        Returns:
+            The distance between the 2 circles
         """
-        return the distance between the center of the 2 circles
-        """
-        # if not isinstance(a_circle, circle):
-        #     return 0 # throw error
+        if not isinstance(a_circle, circle):
+            raise ValueError("Parameter is not a circle")
         return self.center.distance_from_point(a_circle.center)
 
 
     def intersection_with_circle(self, a_circle, proj=projection()):
-        """
-        return 2 points as intersection of the 2 circles
-        the last return parameters shows if there is a real intersection
-            or if it is fake intersection points
-        """
-        # if not isinstance(a_circle, circle):
-        #     return point(.0, .0), point(.0, .0) # throw error
-        # if self.distance_from_circle_center(a_circle) == 0:
-        #     return point(.0, .0), point(.0, .0) # throw error
+        """Return Two intersection points if they exist and generate 2 false intersection points otherwise
 
+        Args:
+            a_circle: The second circle to consider.
+            proj: The projection system to go from Lat/long tuple to x/y coordinate.
+
+        Returns:
+            The 2 points(intersection or generated), boolean indicating if the intersections are generated
+
+        """
+        if not isinstance(a_circle, circle):
+            raise ValueError("parameter is not a circle")
 
         # Check if we approximate intersection or not
         approximation = not self.does_intersect(a_circle) or self.does_contain(a_circle)
@@ -187,14 +245,15 @@ class circle:
 
 
 class trilateration:
-    """
-    This class handle all the trilateration process
-    please choose your projection  http://spatialreference.org/ref/epsg/2192/
-    """
+    """This class handle all the trilateration process"""
 
     def __init__(self, circles_list, projection_system='epsg:2192'):
-        """
-        Doc
+        """trilateration constructor
+
+        Args:
+            circle_list: a List of 3 circle to consider to compute the trilateration
+            projection_system: The projection system name to use. (string)
+                please choose your projection  http://spatialreference.org/ref/epsg/2192/
         """
         if not isinstance(circles_list, list) or len(circles_list) != 3:
             raise ValueError("Incorrect 3-circle list")
@@ -220,9 +279,7 @@ class trilateration:
 
 
     def _compute_intersections(self):
-        """
-        generate all the intersections between circles (estimated or not)
-        """
+        """Generate all the intersections between circles (estimated or not)"""
         for i, circle in enumerate(self._circles):
             for j in xrange(i + 1, len(self._circles)):
                 inter1, inter2, approximation = circle.intersection_with_circle(self._circles[j], self._proj)
@@ -233,9 +290,7 @@ class trilateration:
                     self.is_approximation = True
 
     def _compute_geolocalization(self):
-        """
-        Generate the mean point corresponding to the device estimated localization
-        """
+        """Generate the mean point corresponding to the device estimated localization"""
         mean_lat, mean_lon = .0, .0
         for intersection in self._circles_intersections:
             mean_lat += intersection.lat

@@ -72,6 +72,12 @@ class Test_trilateration(unittest.TestCase):
     def test_negative_radius(self):
         self.assertRaises(ValueError, lambda: circle(point(0,0), -1))
 
+    def test_bad_circle_parameter(self):
+        self.assertRaises(ValueError, lambda: circle(point(0,0), -1).distance_from_circle_center(42))
+
+    def test_bad_point_parameter(self):
+        self.assertRaises(ValueError, lambda: point(0,0).distance_from_point(42))
+
     def test_only_one_circle(self):
         c1 = circle(point(48.84, 2.30), 5000)
         self.assertRaises(ValueError, lambda: trilateration([c1]))
