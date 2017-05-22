@@ -218,19 +218,30 @@ class circle:
 
 
 class gateway(point):
+    """Represent a gateway point"""
     def __init__(self, lat, lon):
+        """gateway constructor
+            see point constructor
+        """
         super(gateway, self).__init__(lat, lon)
 
 
 class uplink:
-    def __init__(self, gateway, date, timestamp):
-        self.gateway = gateway
+    """Represent a message arrived at a datetime at a certain nanosecond time"""
+
+    def __init__(self, a_gateway, date, timestamp):
+        """Uplink constructor
+
+        Args:
+            a_gateway: the gateway that has received the message
+            date: the date of the message
+            timestamp: a precised time (nanosecond) for calculous
+        """
+        if not isinstance(a_gateway, gateway):
+            raise ValueError("Incorrect point")
+        if not is_number(timestamp) or timestamp < 0:
+            raise ValueError("Incorrect timestamp")
+        self.gateway = a_gateway
         self.arrival_date = date
         self.timestamp = timestamp
-
-
-
-
-
-
 

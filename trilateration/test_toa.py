@@ -3,7 +3,7 @@ import unittest
 import time
 import datetime
 from toa import toa
-from utils import circle, point, projection, uplink, gateway, SPEED_OF_LIGHT
+from utils import point, projection, uplink, gateway, SPEED_OF_LIGHT
 # do not forget to use nose2 at root to run test
 
  
@@ -108,7 +108,7 @@ class Test_toa(unittest.TestCase):
 
         self.assertRaises(ValueError, lambda: toa([u1, u2]))
 
-    def test_four_circles(self):
+    def test_four_gateways(self):
         g1 = gateway(48.84, 2.26)
         g2 = gateway(48.84, 2.30)
         g3 = gateway(48.80, 2.30)
