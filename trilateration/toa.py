@@ -30,8 +30,8 @@ class toa:
                 raise ValueError("Invalid item in uplink_list is not a uplink")
 
         # PUBLIC
-        self.geolocalized_device = None
-        self.is_approximation = False
+        self.geolocalized_device = point(.0, .0)
+        self.is_resolved = False
 
         # PRIVATE
         self._uplinks = uplink_list
@@ -54,7 +54,6 @@ class toa:
 
         # generate all the equations
         for i, uplink in enumerate(self._uplinks):
-            # print uplink.gateway, uplink.timestamp
             for j in xrange(i + 1, len(self._uplinks)):
                 # projection over x, y
                 gw_x, gw_y = self._proj.lat_long_to_x_y(uplink.gateway.lat, uplink.gateway.lon)
@@ -71,8 +70,12 @@ class toa:
 
         # generate intersection points
         for solution in solutions:
-            lon, lat = self._proj.x_y_to_long_lat(solution[0][x], solution[0][y])
-            self._intersections.append(point(lat, lon))
+            try:
+                lon, lat = self._proj.x_y_to_long_lat(solution[0][x], solution[0][y])
+                self._intersections.append(point(lat, lon))
+            except Exception as e:
+                #  TODO:should log 
+                pass
 
 
     def _compute_geolocalization(self):
@@ -87,6 +90,7 @@ class toa:
         mean_lat /= float(len(self._intersections))
         mean_lon /= float(len(self._intersections))
 
+        self.is_resolved = True
         self.geolocalized_device = point(mean_lat, mean_lon)
 
 
@@ -96,10 +100,13 @@ if __name__ == '__main__':
     g2 = gateway(48.84, 2.30)
     g3 = gateway(48.80, 2.30)
 
+    t1 = int(time.time() * 1000000000)
+    t2 = int(time.time() * 1000000000)
+    t3 = int(time.time() * 1000000000)    
 
-    u1 = uplink(g1, datetime.datetime.now(), int(time.time() * 1000000000))
-    u2 = uplink(g2, datetime.datetime.now(), int(time.time() * 1000000000))
-    u3 = uplink(g3, datetime.datetime.now(), int(time.time() * 1000000000))
+    u1 = uplink(g1, datetime.datetime.now(), t1)
+    u2 = uplink(g2, datetime.datetime.now(), t2)
+    u3 = uplink(g3, datetime.datetime.now(), t3)
 
     solver = toa([u1, u2, u3])
     print solver.geolocalized_device
