@@ -92,13 +92,16 @@ class tdoa:
             gw_ts = self._uplinks[i].timestamp
             dxn, dyn, dtn = gw_x - x0, gw_y - y0, gw_ts - t0
 
+
+
             # algorithm explained previously
             A = (2 * dxn / SPEED_OF_LIGHT * dtn) - (2 * dx1 / SPEED_OF_LIGHT * dt1)
             B = (2 * dyn / SPEED_OF_LIGHT * dtn) - (2 * dy1 / SPEED_OF_LIGHT * dt1)
-            D = SPEED_OF_LIGHT * (dtn - dt1) - ( (dxn**2 + dyn**2) / SPEED_OF_LIGHT * dtn) + ( (dx1**2 + dy1**2) / SPEED_OF_LIGHT * dt1)
+            D = SPEED_OF_LIGHT * (dtn - dt1) - ((dxn**2 + dyn**2) / SPEED_OF_LIGHT * dtn) + ((dx1**2 + dy1**2) / SPEED_OF_LIGHT * dt1)
             self._equations.append( A * x + B * y + D )
+
         solution = list(linsolve(self._equations, (x,y)))
-        lon, lat = self._proj.x_y_to_long_lat(solution[0][0], solution[0][1])
+        lon, lat = self._proj.x_y_to_long_lat(x0 + solution[0][0], y0 + solution[0][1])
         self._intersections.append(point(lat, lon))
 
 
@@ -123,7 +126,7 @@ if __name__ == '__main__':
     g1 = gateway(48.84, 2.26)
     g2 = gateway(48.84, 2.30)
     g3 = gateway(48.80, 2.30)
-    g4 = gateway(48.70, 2.34)
+    g4 = gateway(48.90, 2.40)
 
     t1 = int(time.time() * 1000000000)
     t2 = int(time.time() * 1000000000)
