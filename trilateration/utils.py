@@ -7,6 +7,7 @@ from sympy import Symbol
 from sympy.solvers import solve
 
 EARTH_RADIUS = 6378100.0
+SPEED_OF_LIGHT = .2997924580 # meter/ns.second
 
 def is_number(to_test):
     """Check if an object is float, int or long.
@@ -69,7 +70,7 @@ class projection:
         return self.projection(x, y, inverse=True)
 
 
-class point:
+class point(object):
     """ Representation of a Latitude / Longitude point"""
 
     def __init__(self, lat, lon):
@@ -214,3 +215,22 @@ class circle:
         else:
             lo1, la1 = proj.x_y_to_long_lat(complex(res[0][0]).real, complex(res[0][1]).real)
             return point(la1, lo1), point(la2, lo2), approximation
+
+
+class gateway(point):
+    def __init__(self, lat, lon):
+        super(gateway, self).__init__(lat, lon)
+
+
+class uplink:
+    def __init__(self, gateway, date, timestamp):
+        self.gateway = gateway
+        self.arrival_date = date
+        self.timestamp = timestamp
+
+
+
+
+
+
+
