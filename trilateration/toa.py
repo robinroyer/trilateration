@@ -9,7 +9,16 @@ from sympy.solvers import solve
 
 from utils import circle, point, projection, uplink, gateway, SPEED_OF_LIGHT
 
+"""
+The aim of this lib is to compute the geolocalization of a device by the time of arrival at 3 gateways.
 
+=> we will store the interesting points in the different usecase and generate and return the center of them
+   .
+  / \
+ / ! \   => We can not compute the response if we have the same gateway twice
+/_____\
+
+"""
 class toa:
     """This class handle all the toa process"""
 
@@ -67,7 +76,6 @@ class toa:
         for i, equation in enumerate(self._equations):
             for j in xrange(i + 1, len(self._equations)):
                 solutions.append(solve([self._equations[i], self._equations[j]]))
-
         # generate intersection points
         for solution in solutions:
             try:
