@@ -88,7 +88,7 @@ class point(object):
         self.lon = float(lon)
 
     def __str__(self):
-        """Overload __str__ for debug"""
+        """Overload __str__ for debug purpose"""
         return "Point ->\n\tlatitude: %f, longitude: %f" % (self.lat, self.lon)
 
     def distance_from_point(self, aPoint):
