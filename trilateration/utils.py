@@ -225,6 +225,15 @@ class gateway(point):
         """
         super(gateway, self).__init__(lat, lon)
 
+    # equality overload
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.lat == other.lat and self.lon == other.lon
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class uplink:
     """Represent a message arrived at a datetime at a certain nanosecond time"""

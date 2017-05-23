@@ -11,9 +11,9 @@ from sympy import linsolve
 from utils import circle, point, projection, uplink, gateway, SPEED_OF_LIGHT
 
 """
-The aim of this lib is to compute the geolocalization of a device by the time of arrival at 3 gateways.
+The aim of this lib is to compute the geolocalization of a device by the time difference of arrival at 3 gateways.
 
-=> we will store the interesting points in the different usecase and generate and return the center of them
+=> we will store the interesting points in the different usecases and return the center of them
    .
   / \
  / ! \   => We can not compute the response if we have the same gateway twice
@@ -21,13 +21,13 @@ The aim of this lib is to compute the geolocalization of a device by the time of
 
 """
 class tdoa:
-    """This class handle all the toa process"""
+    """This class handle all the tdoa process"""
 
     def __init__(self, uplink_list, projection_system='epsg:2192'):
-        """toa constructor
+        """tdoa constructor
 
         Args:
-            uplink_list: a List of 3 circle to consider to compute the trilateration
+            uplink_list: a List of 4 uplinks to consider to compute the tdoa
             projection_system: The projection system name to use. (string)
                 please choose your projection  http://spatialreference.org/ref/epsg/2192/
         """
@@ -38,6 +38,11 @@ class tdoa:
         for uplk in uplink_list:
             if not isinstance(uplk, uplink):
                 raise ValueError("Invalid item in uplink_list is not a uplink")
+        #check gateway uniqueness
+        for i, uplk in enumerate(uplink_list):
+            for j in xrange(i+1, len(uplink_list)):
+                if uplink_list[i].gateway == uplink_list[j].gateway:
+                    raise ValueError("Gateway is not unique")
 
         # PUBLIC
         self.geolocalized_device = point(.0, .0)
@@ -91,8 +96,6 @@ class tdoa:
             gw_x, gw_y = self._proj.lat_long_to_x_y(self._uplinks[i].gateway.lat, self._uplinks[i].gateway.lon)
             gw_ts = self._uplinks[i].timestamp
             dxn, dyn, dtn = gw_x - x0, gw_y - y0, gw_ts - t0
-
-
 
             # algorithm explained previously
             A = (2 * dxn / SPEED_OF_LIGHT * dtn) - (2 * dx1 / SPEED_OF_LIGHT * dt1)
