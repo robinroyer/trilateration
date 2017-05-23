@@ -2,13 +2,19 @@
 # -*- coding:utf-8 -*-
 
 import time
+import math
 import pyproj
 import datetime
 from sympy import Symbol, sqrt, Eq, Abs
 from sympy.solvers import solve
 from sympy import linsolve
+from scipy.optimize import least_squares
 
-from utils import circle, point, projection, uplink, gateway, SPEED_OF_LIGHT
+from trilateration.utils.utils import SPEED_OF_LIGHT
+from trilateration.model.point import point
+from trilateration.model.projection import projection
+from trilateration.model.uplink import uplink
+from trilateration.model.gateway import gateway
 
 """
 The aim of this lib is to compute the geolocalization of a device by the time difference of arrival at 3 gateways.
@@ -20,7 +26,7 @@ The aim of this lib is to compute the geolocalization of a device by the time di
 /_____\
 
 """
-class tdoa:
+class lsm:
     """This class handle all the tdoa process"""
 
     def __init__(self, uplink_list, projection_system='epsg:2192'):
@@ -31,8 +37,8 @@ class tdoa:
             projection_system: The projection system name to use. (string)
                 please choose your projection  http://spatialreference.org/ref/epsg/2192/
         """
-        if not isinstance(uplink_list, list) or len(uplink_list) != 4:
-            raise ValueError("Incorrect uplink_list is not a list")
+        if not isinstance(uplink_list, list) or len(uplink_list) < 3:
+            raise ValueError("Incorrect uplink_list is not a list or not enough uplink")
         if not isinstance(projection_system, str):
             raise ValueError("Incorrect projection_system")
         for uplk in uplink_list:
@@ -56,11 +62,9 @@ class tdoa:
         self._proj = projection(projection_system)
         
         # compute the trilateration
-        self._compute_intersections()
         self._compute_geolocalization()
 
-
-    def _compute_intersections(self):
+    def _lsm_loss_clojure(self):
         """
         Algorithm:
         The goal is to resolve the equation:with a least 4 gatreways (2, 3, 4)
@@ -80,67 +84,50 @@ class tdoa:
                 Bm = (2 * Ym) / (v * Tm) - (2 * Y1) / (v * T1)
                 Dm = v * Tm - v * T1 - (Xm * Xm + Ym * Ym) / (v * Tm) + (X1 * X1 + Y1 * Y1) / (v * T1)
         """
-        x, y = Symbol('x'), Symbol('y')
-
         # Pivot values
         x0, y0 = self._proj.lat_long_to_x_y(self._uplinks[0].gateway.lat, self._uplinks[0].gateway.lon)
         t0 = self._uplinks[0].timestamp
 
-        # delta 1
-        x1, y1 = self._proj.lat_long_to_x_y(self._uplinks[1].gateway.lat, self._uplinks[1].gateway.lon)
-        t1 = self._uplinks[1].timestamp
-        dx1, dy1, dt1 = x1 - x0, y1 - y0, t1 - t0
+        def clojure(x):
+            loss = .0
+            for i, uplink in enumerate(self._uplinks):
+                if i == 0:
+                    continue
+                gw_x, gw_y = self._proj.lat_long_to_x_y(uplink.gateway.lat, uplink.gateway.lon)
+                gw_ts = uplink.timestamp
 
-        for i in xrange(2, len(self._uplinks)):
-            # delta n
-            gw_x, gw_y = self._proj.lat_long_to_x_y(self._uplinks[i].gateway.lat, self._uplinks[i].gateway.lon)
-            gw_ts = self._uplinks[i].timestamp
-            dxn, dyn, dtn = gw_x - x0, gw_y - y0, gw_ts - t0
-
-            # algorithm explained previously
-            A = (2 * dxn / SPEED_OF_LIGHT * dtn) - (2 * dx1 / SPEED_OF_LIGHT * dt1)
-            B = (2 * dyn / SPEED_OF_LIGHT * dtn) - (2 * dy1 / SPEED_OF_LIGHT * dt1)
-            D = SPEED_OF_LIGHT * (dtn - dt1) - ((dxn**2 + dyn**2) / SPEED_OF_LIGHT * dtn) + ((dx1**2 + dy1**2) / SPEED_OF_LIGHT * dt1)
-            self._equations.append( A * x + B * y + D )
-
-        solution = list(linsolve(self._equations, (x,y)))
-        lon, lat = self._proj.x_y_to_long_lat(x0 + solution[0][0], y0 + solution[0][1])
-        self._intersections.append(point(lat, lon))
-
+                loss += abs(math.sqrt((gw_x - x[0])**2 + (gw_y - x[1])**2) - math.sqrt((x0 - x[0])**2 + (y0 - x[1])**2) - SPEED_OF_LIGHT * (gw_ts - t0))
+                return loss
+        return clojure
 
     def _compute_geolocalization(self):
-        """Generate the mean point corresponding to the device estimated localization"""
-        if len(self._intersections) == 0:
-            return
-        mean_lat, mean_lon = .0, .0
-        for intersection in self._intersections:
-            mean_lat += intersection.lat
-            mean_lon += intersection.lon
-
-        mean_lat /= float(len(self._intersections))
-        mean_lon /= float(len(self._intersections))
-
+        x0, y0 = self._proj.lat_long_to_x_y(self._uplinks[0].gateway.lat, self._uplinks[0].gateway.lon)
+        solution = least_squares(self._lsm_loss_clojure(), [x0, y0])
+        lon, lat = self._proj.x_y_to_long_lat(solution["x"][0], solution["x"][1])
         self.is_resolved = True
-        self.geolocalized_device = point(mean_lat, mean_lon)
+        self.geolocalized_device = point(lat, lon)
 
 
 # Test the lib
 if __name__ == '__main__':
     g1 = gateway(48.84, 2.26)
     g2 = gateway(48.84, 2.30)
-    g3 = gateway(48.80, 2.30)
+    g3 = gateway(48.80, 2.33)
     g4 = gateway(48.90, 2.40)
+    g5 = gateway(48.90, 2.50)
 
     t1 = int(time.time() * 1000000000)
     t2 = int(time.time() * 1000000000)
     t3 = int(time.time() * 1000000000)    
     t4 = int(time.time() * 1000000000)
+    t5 = int(time.time() * 1000000000)
 
     u1 = uplink(g1, datetime.datetime.now(), t1)
     u2 = uplink(g2, datetime.datetime.now(), t2)
     u3 = uplink(g3, datetime.datetime.now(), t3)
     u4 = uplink(g4, datetime.datetime.now(), t4)
+    u5 = uplink(g5, datetime.datetime.now(), t4)
 
-    solver = tdoa([u1, u2, u3, u4])
+    solver = lsm([u1, u2, u3, u4, u5])
     print solver.geolocalized_device
 
