@@ -10,11 +10,11 @@ from sympy.solvers import solve
 from sympy import linsolve
 from scipy.optimize import least_squares
 
-from trilateration.utils.utils import SPEED_OF_LIGHT
-from trilateration.model.point import point
-from trilateration.model.projection import projection
-from trilateration.model.uplink import uplink
-from trilateration.model.gateway import gateway
+from utils.utils import SPEED_OF_LIGHT
+from model.point import point
+from model.projection import projection
+from model.uplink import uplink
+from model.gateway import gateway
 
 """
 The aim of this lib is to compute the geolocalization of a device by the time difference of arrival at 3 gateways.

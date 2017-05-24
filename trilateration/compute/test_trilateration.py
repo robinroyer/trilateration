@@ -1,12 +1,12 @@
 import unittest
 
 from trilateration import trilateration
-from trilateration.model.point import point
-from trilateration.model.uplink import uplink
-from trilateration.model.circle import circle
-from trilateration.model.gateway import gateway
-from trilateration.utils.utils import SPEED_OF_LIGHT
-from trilateration.model.projection import projection
+from model.point import point
+from model.uplink import uplink
+from model.circle import circle
+from model.gateway import gateway
+from utils.utils import SPEED_OF_LIGHT
+from model.projection import projection
 # do not forget to use nose2 at root to run test
 
  

@@ -3,7 +3,6 @@ import unittest
 import time
 import datetime
 from uplink import uplink
-from uplink import uplink
 from gateway import gateway
 # do not forget to use nose2 at root to run test
 

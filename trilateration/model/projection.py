@@ -19,6 +19,8 @@ class projection:
             a_projection string reprentation fo the projection system
             see http://spatialreference.org/ref/epsg/2192/
         """
+        if not isinstance(a_projection, str):
+            raise ValueError("The projection parameter should be a string")
         self.projection = pyproj.Proj(init=a_projection)
 
     def lat_long_to_x_y(self, lat, lon):

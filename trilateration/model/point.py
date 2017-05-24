@@ -1,6 +1,8 @@
 
 import math
 
+from utils.utils import is_number, EARTH_RADIUS
+
 class point(object):
     """ Representation of a Latitude / Longitude point"""
 
