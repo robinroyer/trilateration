@@ -4,7 +4,11 @@ import time
 import datetime
 
 from lsm import lsm
-from utils import point, projection, uplink, gateway, SPEED_OF_LIGHT
+from model.point import point
+from model.uplink import uplink
+from model.gateway import gateway
+from utils.utils import SPEED_OF_LIGHT
+from model.projection import projection
 # do not forget to use nose2 at root to run test
 
  

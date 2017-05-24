@@ -8,7 +8,11 @@ from sympy import Symbol, sqrt, Eq, Abs
 from sympy.solvers import solve
 from sympy import linsolve
 
-from utils import circle, point, projection, uplink, gateway, SPEED_OF_LIGHT
+from utils.utils import SPEED_OF_LIGHT
+from model.point import point
+from model.projection import projection
+from model.uplink import uplink
+from model.gateway import gateway
 
 """
 The aim of this lib is to compute the geolocalization of a device by the time difference of arrival at 3 gateways.
