@@ -3,9 +3,9 @@ import unittest
 import datetime
 import numpy as np
 
-from trilateration.model.point import point
-from trilateration.model.uplink import uplink
-from trilateration.model.gateway import gateway
+from ..model.point import point
+from ..model.uplink import uplink
+from ..model.gateway import gateway
 from statistic_filter import filter_uplink_timestamps, filter_point_distance
 
 
@@ -82,8 +82,6 @@ class Test_filtering_functions(unittest.TestCase):
         res =  filter_point_distance(points, 1)
         self.assertEqual(len(points), 0)
         self.assertEqual(len(res), 0)
-
-
 
 
 if __name__ == '__main__':

@@ -6,12 +6,12 @@ import pyproj
 from sympy import Symbol
 from sympy.solvers import solve
 
-from utils.utils import SPEED_OF_LIGHT
-from model.point import point
-from model.circle import circle
-from model.projection import projection
-from model.uplink import uplink
-from model.gateway import gateway
+from ..utils.utils import SPEED_OF_LIGHT
+from ..model.point import point
+from ..model.circle import circle
+from ..model.projection import projection
+from ..model.uplink import uplink
+from ..model.gateway import gateway
 
 """
 The aim of this lib is to compute the intersection of 3 circles by trilateration.

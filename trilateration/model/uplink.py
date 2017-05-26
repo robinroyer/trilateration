@@ -1,6 +1,6 @@
 
 from gateway import gateway
-from utils.utils import is_number
+from ..utils.utils import is_number
 
 class uplink:
     """Represent a message arrived at a datetime at a certain nanosecond time"""

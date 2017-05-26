@@ -5,7 +5,7 @@ from sympy import Symbol
 from sympy.solvers import solve
 
 from point import point
-from utils.utils import is_number
+from ..utils.utils import is_number
 from projection import projection
 
 class circle:

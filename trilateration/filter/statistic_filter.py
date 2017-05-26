@@ -3,9 +3,9 @@ import time
 import datetime
 import numpy as np
 
-from trilateration.model.point import point
-from trilateration.model.uplink import uplink
-from trilateration.model.gateway import gateway
+from ..model.point import point
+from ..model.uplink import uplink
+from ..model.gateway import gateway
 
 def filter_uplink_timestamps(uplinks, m=2):
     """Statical fitler on Timestamp distribution

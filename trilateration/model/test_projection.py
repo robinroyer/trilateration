@@ -15,11 +15,11 @@ class Test_projection(unittest.TestCase):
 
         proj = projection()
         x, y = proj.lat_long_to_x_y(48.84, 2.26)
-        self.assertEqual(594327.720979058, x)
-        self.assertEqual(2426852.1010616063, y)
+        self.assertAlmostEqual(594327.720979058, x)
+        self.assertAlmostEqual(2426852.1010616063, y)
         lon, lat = proj.x_y_to_long_lat(x, y)
-        self.assertEqual(48.83999999998599, lat)
-        self.assertEqual(2.2600000000000007, lon)
+        self.assertAlmostEqual(48.83999999998599, lat)
+        self.assertAlmostEqual(2.2600000000000007, lon)
 
     # =============================================== ERROR CHECKING
 
