@@ -17,13 +17,17 @@ def filter_uplink_timestamps(uplinks, m=2):
         Return:
             The list of uplink filtered on the timestamp
     """
+    if len(uplinks) == 0:
+        return []
+    if m < 0:
+        m = 1
     data = np.array([])
     for uplink in uplinks:
         data = np.append(data, uplink.timestamp)
 
     mean = np.mean(data)
     std = np.std(data)
-    return filter(lambda u: abs(u.timestamp - mean) < m * std, uplinks)
+    return filter(lambda u: abs(u.timestamp - mean) <= m * std, uplinks)
 
 
 def filter_point_distance(points, m=2):
@@ -36,6 +40,10 @@ def filter_point_distance(points, m=2):
         Return:
             The list of point filtered on the distance distribution
     """
+    if len(points) == 0:
+        return []
+    if m < 0:
+        m = 1
     data = np.empty([len(points), 2])
     for i, p in enumerate(points):
         data[i,0] = p.lat
@@ -47,7 +55,8 @@ def filter_point_distance(points, m=2):
     std = np.std(data, axis=0)
     std_point = point(std[0], std[1])
 
-    return filter(lambda p: (abs(p.lat - mean_point.lat) < m * std_point.lat) and abs(p.lon - mean_point.lon) < m * std_point.lon, points)
+    return filter(lambda p: (abs(p.lat - mean_point.lat) <= m * std_point.lat) \
+        and abs(p.lon - mean_point.lon) <= m * std_point.lon, points)
 
 
 if __name__ == '__main__':
