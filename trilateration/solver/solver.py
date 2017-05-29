@@ -6,7 +6,7 @@ from ..compute.lsm import lsm
 from ..compute.tdoa import tdoa
 from ..compute.toa import toa
 
-from ..filter.statistic_filter import filter_point_distance, filter_uplink_timestamps
+from ..filter.statistic_filter import filter_point_distance, filter_uplink_timestamps, filter_uplink_distance
 
 from ..model.gateway import gateway
 from ..model.uplink import uplink
@@ -16,7 +16,7 @@ class solver:
 
         Args:
             compute: string ["auto", "lsm", "tdoa", "toa"]
-            filter: array ["timestamp", "distance"]
+            filter: array ["timestamp", "result_distance", "gateway_distance"]
             TODO: callable as filter ?
             filter_params {} key: timestamp, distance
             data [] : array of array [lat, long , date, ts]
@@ -25,12 +25,13 @@ class solver:
     LSM = "lsm"
     TOA = "toa"
     TDOA = "tdoa"
-    DISTANCE = "distance"
+    DISTANCE = "result_distance"
     TIMESTAMP = "timestamp"
+    GATEWAY = "gateway_distance"
 
 
     # TODO add kalman
-    def __init__(self, compute="auto", filter=["timestamp", "distance"], filter_params = {}):
+    def __init__(self, compute="auto", filter=["timestamp", "result_distance", "gateway_distance"], filter_params = {}):
         self.is_resolved = False
         self.compute = compute
         self.filter = filter
@@ -50,6 +51,11 @@ class solver:
                 uplinks = filter_uplink_timestamps(uplinks, self.filter_params[self.TIMESTAMP])
             else:
                 uplinks = filter_uplink_timestamps(uplinks)
+        if self.GATEWAY in self.filter:
+            if self.GATEWAY in self.filter_params.keys():
+                uplinks = filter_uplink_distance(uplinks, self.filter_params[self.GATEWAY])
+            else:
+                uplinks = filter_uplink_distance(uplinks)
 
         # Choose compute algorithm
         if self.compute == self.TDOA:

@@ -6,7 +6,7 @@ import numpy as np
 from ..model.point import point
 from ..model.uplink import uplink
 from ..model.gateway import gateway
-from statistic_filter import filter_uplink_timestamps, filter_point_distance
+from statistic_filter import filter_uplink_timestamps, filter_point_distance, filter_uplink_distance 
 
 
 
@@ -33,6 +33,14 @@ class Test_filtering_functions(unittest.TestCase):
         self.assertEqual(len(points), 10)
         self.assertEqual(len(res), 6)
 
+    def test_filter_gateway_distance(self):
+        uplinks = []
+        for i in xrange(0,10):
+            uplinks.append(uplink(gateway(48.84 + i, 2.26 + i), 2, 2))
+        res = filter_uplink_distance(uplinks, 1)
+        self.assertEqual(len(uplinks), 10)
+        self.assertEqual(len(res), 6)
+
     def test_filter_uplink_timestamps_negative_one_uplink(self):
         uplinks = []
         g = gateway(48.84, 2.26)
@@ -49,6 +57,13 @@ class Test_filtering_functions(unittest.TestCase):
         points.append(point(48.84, 2.26))
         res =  filter_point_distance(points, 0)
         self.assertEqual(len(points), 1)
+        self.assertEqual(len(res), 1)
+
+    def test_filter_uplink_distance_negative_one_point(self):
+        uplinks = []
+        uplinks.append(uplink(gateway(48.84, 2.26), 2, 2))
+        res = filter_uplink_distance(uplinks, 0)
+        self.assertEqual(len(uplinks), 1)
         self.assertEqual(len(res), 1)
 
     def test_filter_uplink_timestamps_negative_param(self):
@@ -81,6 +96,12 @@ class Test_filtering_functions(unittest.TestCase):
         points = []
         res =  filter_point_distance(points, 1)
         self.assertEqual(len(points), 0)
+        self.assertEqual(len(res), 0)
+
+    def test_filter_empty_uplink_distance(self):
+        uplinks = []
+        res =  filter_uplink_distance(uplinks, 1)
+        self.assertEqual(len(uplinks), 0)
         self.assertEqual(len(res), 0)
 
 
