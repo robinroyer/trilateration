@@ -1,5 +1,6 @@
 
 import math
+import string
 
 from ..utils.utils import is_number, EARTH_RADIUS
 
@@ -14,9 +15,9 @@ class point(object):
             lon: The longitude vale.(-90 < lon < 90)
         """
         if not is_number(lon) or lon > 180 or lon < -180:
-            raise ValueError("Incorrect longitude")
+            raise ValueError("Incorrect longitude" + str(lon))
         if not is_number(lat) or lat > 90 or lat < -90:
-            raise ValueError("Incorrect latitude")
+            raise ValueError("Incorrect latitude : " + str(lat))
         self.lat = float(lat)
         self.lon = float(lon)
 

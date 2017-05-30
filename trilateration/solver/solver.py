@@ -11,6 +11,7 @@ from ..filter.statistic_filter import filter_point_distance, filter_uplink_times
 from ..model.gateway import gateway
 from ..model.uplink import uplink
 
+
 class solver:
     """Solver is the high level class of this lib
 
@@ -101,6 +102,9 @@ class solver:
             self.algorithm = lsm(params)
 
 if __name__ == '__main__':
+
+    print getPoint1Uplinks()
+
     solver = solver(
         "tdoa",
         ["timestamp"],
@@ -111,6 +115,11 @@ if __name__ == '__main__':
             [48.54, 2.06, datetime.datetime.now(), int(time.time() * 1000000000)]
         ]
     )
+
+
+
+
+
 
 
 

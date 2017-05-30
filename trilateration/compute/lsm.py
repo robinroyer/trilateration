@@ -2,9 +2,11 @@
 # -*- coding:utf-8 -*-
 
 import time
+import string
 import math
 import pyproj
 import datetime
+import numpy as np
 from sympy import Symbol, sqrt, Eq, Abs
 from sympy.solvers import solve
 from sympy import linsolve
@@ -37,13 +39,13 @@ class lsm:
             projection_system: The projection system name to use. (string)
                 please choose your projection  http://spatialreference.org/ref/epsg/2192/
         """
-        if not isinstance(uplink_list, list) or len(uplink_list) < 3:
-            raise ValueError("Incorrect uplink_list is not a list or not enough uplink")
+        if not isinstance(uplink_list, list) and not isinstance(uplink_list, np.ndarray)  or len(uplink_list) < 3:
+            raise ValueError("Incorrect uplink_list is not a list or not enough uplink" + str(type(uplink_list)) )
         if not isinstance(projection_system, str):
             raise ValueError("Incorrect projection_system")
         for uplk in uplink_list:
             if not isinstance(uplk, uplink):
-                raise ValueError("Invalid item in uplink_list is not a uplink")
+                raise ValueError("Invalid item in uplink_list is not a uplink :")
         #check gateway uniqueness
         for i, uplk in enumerate(uplink_list):
             for j in xrange(i+1, len(uplink_list)):

@@ -4,6 +4,7 @@
 import time
 import pyproj
 import datetime
+import numpy as np
 from sympy import Symbol, sqrt, Eq, Abs
 from sympy.solvers import solve
 
@@ -34,7 +35,7 @@ class toa:
             projection_system: The projection system name to use. (string)
                 please choose your projection  http://spatialreference.org/ref/epsg/2192/
         """
-        if not isinstance(uplink_list, list) or len(uplink_list) != 3:
+        if not isinstance(uplink_list, list) and not isinstance(uplink_list, np.ndarray)  or len(uplink_list) != 3:
             raise ValueError("Incorrect uplink_list is not a list")
         if not isinstance(projection_system, str):
             raise ValueError("Incorrect projection_system")

@@ -3,11 +3,12 @@ from point import point
 
 class gateway(point):
     """Represent a gateway point"""
-    def __init__(self, lat, lon):
+    def __init__(self, lat, lon, id = ""):
         """gateway constructor
             see point constructor
         """
         super(gateway, self).__init__(lat, lon)
+        self.id = id
 
     # equality overload
     def __eq__(self, other):
