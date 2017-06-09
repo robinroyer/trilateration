@@ -36,12 +36,12 @@ class Test_solver(unittest.TestCase):
 
     def test_2(self):
         # test on first measure point
-        localisation = measures[0]
-        uplks = getPoint1Uplinks()
+        localisation = measures[4]
+        uplks = getPoint5Uplinks()
 
         sol = solver(
             "tdoa",
-            []
+            ["timestamp", "result_distance"]
         )
 
         all_results = []

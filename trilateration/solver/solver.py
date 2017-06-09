@@ -52,6 +52,7 @@ class solver:
                 uplinks = filter_uplink_timestamps(uplinks, self.filter_params[self.TIMESTAMP])
             else:
                 uplinks = filter_uplink_timestamps(uplinks)
+
         if self.GATEWAY in self.filter:
             if self.GATEWAY in self.filter_params.keys():
                 uplinks = filter_uplink_distance(uplinks, self.filter_params[self.GATEWAY])
