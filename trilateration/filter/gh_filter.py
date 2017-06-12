@@ -8,18 +8,24 @@ import matplotlib.pyplot as plt
 class gh_filter:
 	"""create a gh filter"""
 	def __init__(self, pos, dpos, dtime, g, h):
+		self.g = g
+		self.h = h
 		self.filter = GHFilter(x=pos, dx=dpos, dt=dtime, g=g, h=h)
 
-	def new_measure(self, measure):
-		# measure should be an array
-		return self.filter.update(measure)
+	def new_measure(self, measure, g=None, h=None):
+		if g is not None:
+			self.g = g
+		if h is not None:
+			self.h = h
+
+		return self.filter.update(measure, self.g, self.h)
 
 if __name__ == '__main__':
 	pos = np.array([0.,0.])
-	dpos = np.array([0.,0.])
+	dpos = np.array([1.,1.])
 	dtime = 1.
 	g = .1
-	h = .01
+	h = .0
 
 	filter = gh_filter(pos, dpos, dtime, g, h)
 
