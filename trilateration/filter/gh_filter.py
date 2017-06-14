@@ -2,10 +2,11 @@ from filterpy.gh import GHFilter
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from filter import Filter
 
 
 
-class gh_filter:
+class gh_filter(Filter):
 	"""create a gh filter"""
 	def __init__(self, pos, dpos, dtime, g, h):
 		self.g = g

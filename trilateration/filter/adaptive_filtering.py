@@ -9,8 +9,9 @@ from scipy.linalg import block_diag
 from filterpy.common import Q_discrete_white_noise
 from filterpy.common import dot3
 from numpy.linalg import inv
+from filter import Filter
 
-class akf_filter:
+class akf_filter(Filter):
 	"""create a gh filter"""
 	def __init__(self, dimx, dimz, state, covariance, transitionMat, measurementFunc, dt, noiseCovariance, correlation, dimNoise, Q_scale_factor, eps_max):
 		self.filter = KalmanFilter(dim_x=dimx, dim_z=dimz)

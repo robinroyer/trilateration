@@ -8,12 +8,13 @@ import sympy
 from math import sqrt
 from scipy.linalg import block_diag
 
+from filter import Filter
 from kalman_filter import kf_filter
 from filterpy.kalman import KalmanFilter
 from filterpy.kalman import IMMEstimator
 from filterpy.common import Q_discrete_white_noise
 
-class imm_filter:
+class imm_filter(Filter):
 	def __init__(self, filters, N, mu):
 		self.filter = IMMEstimator(filters, mu, M)
 

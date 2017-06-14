@@ -7,8 +7,10 @@ from math import sqrt
 import sympy
 from scipy.linalg import block_diag
 from filterpy.common import Q_discrete_white_noise
+from filter import Filter
 
-class kf_filter:
+
+class kf_filter(Filter):
 	"""create a gh filter"""
 	def __init__(self, dimx, dimz, state, covariance, transitionMat, measurementFunc, dt, noiseCovariance, correlation, dimNoise):
 		self.filter = KalmanFilter(dim_x=dimx, dim_z=dimz)

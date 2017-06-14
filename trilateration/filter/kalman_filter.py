@@ -5,10 +5,11 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from math import sqrt
 import sympy
+from filter import Filter
 from scipy.linalg import block_diag
 from filterpy.common import Q_discrete_white_noise
 
-class kf_filter:
+class kf_filter(Filter):
 	"""create a gh filter"""
 	def __init__(self, dimx, dimz, state, covariance, transitionMat, measurementFunc, dt, noiseCovariance, correlation, dimNoise):
 		self.filter = KalmanFilter(dim_x=dimx, dim_z=dimz)

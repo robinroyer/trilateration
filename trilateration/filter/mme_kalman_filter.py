@@ -7,11 +7,12 @@ import sympy
 from math import sqrt
 from scipy.linalg import block_diag
 
+from filter import Filter
 from kalman_filter import kf_filter
 from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 
-class mme_filter:
+class mme_filter(Filter):
 	"""storing the 2 filters"""
 	def __init__(self, filter1, filter2, threshold):
 		self.kf1 = filter1
