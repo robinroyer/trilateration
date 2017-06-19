@@ -1,29 +1,37 @@
+from __future__ import absolute_import
 
-import copy
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import sympy
 
-from math import sqrt
-from scipy.linalg import block_diag
+from ..filtering.kalman_filter import KF_Filter
+from ..filtering.abstract_filter import Filter
 
-from filter import Filter
-from kalman_filter import kf_filter
-from filterpy.kalman import KalmanFilter
-from filterpy.kalman import IMMEstimator
-from filterpy.common import Q_discrete_white_noise
 
-class imm_filter(Filter):
-	def __init__(self, filters, N, mu):
-		self.filter = IMMEstimator(filters, mu, M)
+class MME_Filter(Filter):
+	"""storing the 2 filters"""
+	def __init__(self, filter1, filter2, threshold):
+		self.kf1 = filter1
+		self.kf2 = filter2
+		self.threshold = threshold
 
 	def new_measure(self, measure):
-		self.filter.update(measure)
-		return self.filter.x.copy, self.filter.x.copy()
+		# filter 1
+		self.kf1.new_measure(measure)
+		x1, cov1 = self.kf1.filter.x, self.kf1.filter.P
+		# filter 2
+		self.kf2.new_measure(measure)
+		x2, cov2 = self.kf2.filter.x, self.kf2.filter.P
 
+		# choosing which filter to follow
+		std1 = np.sqrt(self.kf1.filter.R[0,0])
+		std2 = np.sqrt(self.kf1.filter.R[1,1])
+		if np.abs(self.kf1.filter.y[0]) < self.threshold * std1 and np.abs(self.kf1.filter.y[1]) < self.threshold * std2:
+			print "vitesse"
+			return x1, cov1
+		else:
+			print "acceleration"
+			return x2, cov2
 
-# todo
 
 if __name__ == '__main__':
 
@@ -49,7 +57,7 @@ if __name__ == '__main__':
 									[0., 0., 0., 0.,        1.,        0.],
 									[0., 0., 0., 0.,        0.,        1.]])
 
-		kf2 = kf_filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise)
+		kf2 = KF_Filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise)
 
 
 		# ========================== CONSTANT SPEED
@@ -68,11 +76,11 @@ if __name__ == '__main__':
 									[0., 1., 0., dt],
 									[0., 0., 1., 0.],
 									[0., 0., 0., 1.]])
-		kf1 = kf_filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise)
+		kf1 = KF_Filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise)
 
 		# =========================== MME KALMAN FILTER
 		threshold = 10.
-		kf = imm_filter(kf1, kf2, threshold)
+		kf = MME_Filter(kf1, kf2, threshold)
 
 		# ========================== MEASURE
 

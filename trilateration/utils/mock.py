@@ -1,8 +1,10 @@
+from __future__ import absolute_import
 
 import math
+import numpy as np
 
-from ..model.gateway import gateway
-from ..model.uplink import uplink
+from ..model.gateway import Gateway
+from ..model.uplink import Uplink
 
 measures = [
 	[48.945997, 2.247975],
@@ -13,28 +15,28 @@ measures = [
 ];
 
 gateways = [
- gateway( 48.90822288, 2.23820425 , "M10008_DIV", 0.0287),
- gateway( 48.90832622, 2.23796952 , "M10008_MAIN", 0.0287),
- gateway( 48.94521095, 2.24963632 , "M10064_DIV", 0.04901),
- gateway( 48.94518095, 2.24965715 , "M10064_MAIN", 0.04901),
- gateway( 48.92118138, 2.2721174 , "M10194_DIV", 0.02681),
- gateway( 48.92120611, 2.27208657 , "M10194_MAIN", 0.02681),
- gateway( 48.92680848, 2.24737008 , "M10368_MAIN", 0.0320),
- gateway( 48.95516823, 2.23047955 , "M10430_DIV", 0.0336),
- gateway( 48.95516545, 2.23051261 , "M10430_MAIN", 0.0336),
- gateway( 48.96797023, 2.25526308 , "M10469_DIV", 0.04296),
- gateway( 48.96804412, 2.25523391 , "M10469_MAIN", 0.04208),
- gateway( 48.92351974, 2.21839122 , "M12342_DIV", 0.0468),
- gateway( 48.92354446, 2.21841428 , "M12342_MAIN", 0.04676),
- gateway( 48.950231, 2.2674599 , "M12771_MAIN", 0.02705),
- gateway( 48.9586489, 2.2831580 , "M14006_DIV", 0.03077),
- gateway( 48.9586639, 2.28315279 , "M14006_MAIN", 0.03077),
- gateway( 48.94530403, 2.20133531 , "M14007_DIV", 0.05167),
- gateway( 48.94530459, 2.20135920 , "M14007_MAIN", 0.05185),
- gateway( 48.86356035, 2.192602766 , "M14330_DIV", 0.03445),
- gateway( 48.86354507, 2.192600822 , "M14330_MAIN", 0.03445),
- gateway( 48.96288084, 2.24715359 , "M14940_DIV", 0.04472),
- gateway( 48.96286417, 2.24718221 , "M14940_MAIN", 0.04472)
+ Gateway( 48.90822288, 2.23820425 , "M10008_DIV", 0.0287),
+ Gateway( 48.90832622, 2.23796952 , "M10008_MAIN", 0.0287),
+ Gateway( 48.94521095, 2.24963632 , "M10064_DIV", 0.04901),
+ Gateway( 48.94518095, 2.24965715 , "M10064_MAIN", 0.04901),
+ Gateway( 48.92118138, 2.2721174 , "M10194_DIV", 0.02681),
+ Gateway( 48.92120611, 2.27208657 , "M10194_MAIN", 0.02681),
+ Gateway( 48.92680848, 2.24737008 , "M10368_MAIN", 0.0320),
+ Gateway( 48.95516823, 2.23047955 , "M10430_DIV", 0.0336),
+ Gateway( 48.95516545, 2.23051261 , "M10430_MAIN", 0.0336),
+ Gateway( 48.96797023, 2.25526308 , "M10469_DIV", 0.04296),
+ Gateway( 48.96804412, 2.25523391 , "M10469_MAIN", 0.04208),
+ Gateway( 48.92351974, 2.21839122 , "M12342_DIV", 0.0468),
+ Gateway( 48.92354446, 2.21841428 , "M12342_MAIN", 0.04676),
+ Gateway( 48.950231, 2.2674599 , "M12771_MAIN", 0.02705),
+ Gateway( 48.9586489, 2.2831580 , "M14006_DIV", 0.03077),
+ Gateway( 48.9586639, 2.28315279 , "M14006_MAIN", 0.03077),
+ Gateway( 48.94530403, 2.20133531 , "M14007_DIV", 0.05167),
+ Gateway( 48.94530459, 2.20135920 , "M14007_MAIN", 0.05185),
+ Gateway( 48.86356035, 2.192602766 , "M14330_DIV", 0.03445),
+ Gateway( 48.86354507, 2.192600822 , "M14330_MAIN", 0.03445),
+ Gateway( 48.96288084, 2.24715359 , "M14940_DIV", 0.04472),
+ Gateway( 48.96286417, 2.24718221 , "M14940_MAIN", 0.04472)
 ]
 
 
@@ -467,7 +469,7 @@ def getPointUplinks(point):
 		records = []
 		for i, received in enumerate(fcount):
 			if not math.isnan(float(received)):
-				records.append([gateways[i].lat,gateways[i].lon, "ballec", received])
+				records.append([gateways[i].lat, gateways[i].lon, "ballec", received])
 		uplinks.append(records)
 	return uplinks
 
@@ -486,6 +488,28 @@ def getPoint4Uplinks():
 
 def getPoint5Uplinks():
 	return getPointUplinks(point5)
+
+def generateRectangle(x, epoch):
+	""" generate a point on a rectangle by its sequence number"""
+	if x > epoch * 3/4:
+		return np.array([7*epoch/4 - 2*x, 2*x - 2*epoch])
+	elif x > epoch * 2/4:
+		return np.array([epoch - x, epoch/4 - x])
+	elif x > epoch * 1/4:
+		return np.array([2*x - epoch/2, 3*epoch/4 - 2*x])
+	else:
+		return np.array([x - epoch/4, x])
+
+def generateFakeNoisyData2d(epoch):
+	""" rectangle with noise"""
+	noisyData = np.empty([epoch, 2])
+	data = np.empty([epoch, 2])
+	for x in xrange(0, epoch):
+		pos = generateRectangle(x, epoch)
+		data[x] = pos
+		noisyData[x] = pos + 15 * (np.random.rand(2) - 0.5) + 15 * (np.random.rand(2) - 0.5)
+	return noisyData, data
+
 
 if __name__ == '__main__':
 	print getPoint1Uplinks()

@@ -1,12 +1,13 @@
-from filterpy.gh import GHFilter
+from __future__ import absolute_import
+
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-from filter import Filter
+from filterpy.gh import GHFilter
+
+from ..filtering.abstract_filter import Filter
 
 
-
-class gh_filter(Filter):
+class GH_Filter(Filter):
 	"""create a gh filter"""
 	def __init__(self, pos, dpos, dtime, g, h):
 		self.g = g

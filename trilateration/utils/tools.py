@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 EARTH_RADIUS = 6378100.0
 SPEED_OF_LIGHT = .2997924580 # meter/ns.second
 

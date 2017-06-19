@@ -1,18 +1,16 @@
+from __future__ import absolute_import
+
+import numpy as np
+import matplotlib.pyplot as plt
 from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from math import sqrt
-import sympy
-from scipy.linalg import block_diag
-from filterpy.common import Q_discrete_white_noise
-from filter import Filter
+
+from ..filtering.abstract_filter import Filter
 
 
-class kf_filter(Filter):
+class KF_Filter(Filter):
 	"""create a gh filter"""
-	def __init__(self, dimx, dimz, state, covariance, transitionMat, measurementFunc, dt, noiseCovariance, correlation, dimNoise):
+	def __init__(self, dimx, dimz, state, covariance, transitionMat, measurementFunc, dt, noiseCovariance, correlation, dimNoise, alpha):
 		self.filter = KalmanFilter(dim_x=dimx, dim_z=dimz)
 		self.filter.x = np.array(state) 			# state (position and velocity)
 		self.filter.F = np.array(transitionMat)  	# state transition matrix
@@ -29,6 +27,7 @@ class kf_filter(Filter):
 		    self.filter.Q = Q_discrete_white_noise(dim=dimNoise, dt=dt, var=noiseCovariance)
 		else:
 		    self.filter.Q[:] = noiseCovariance
+		self.filter.alpha = alpha
 
 
 	def new_measure(self, measure):
@@ -46,6 +45,7 @@ if __name__ == '__main__':
 		dimx = 2
 		dimz = 1
 		dimNoise = 2
+		alpha = 1.05
 		dt = .1
 		correlation = 5 # how fast you want to update model (big number is slow convergercence)
 		covariance = 500 # => how close to the measurement you want to be
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 		measurementFunc = np.array([[1., 0]])
 		stateTransition = np.array([[1., dt],
 									[0., 1.]])
-		kf = kf_filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise)
+		kf = KF_Filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise, alpha)
 
 		results = np.array([])
 		resultscov = np.array([])
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 		plt.figure(1)
 		plt.subplot(221)
 		plt.plot(resultscov, label="covariance")
-		plt.title("filtre de Kalman")
+		plt.title("filtre de Kalman order 1")
 		
 		plt.subplot(212)
 		plt.plot(results, label="filtre de kalman")
@@ -102,6 +102,7 @@ if __name__ == '__main__':
 		dimz = 2
 		dimNoise = 2
 		dt = .1
+		alpha = 1.05
 		correlation = 5 # how fast you want to update model (big number is slow convergercence)
 		covariance = 5 # => how close to the measurement you want to be
 		# noiseCovariance = 0.1  # => how do you trust your sensor
@@ -113,7 +114,7 @@ if __name__ == '__main__':
 									[0., 1., 0., dt],
 									[0., 0., 1., 0.],
 									[0., 0., 0., 1.]])
-		kf = kf_filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise)
+		kf = KF_Filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise, alpha)
 
 		epoch = 500
 		results = np.empty([epoch, 4])
@@ -144,7 +145,7 @@ if __name__ == '__main__':
 		plt.figure(1)
 		plt.subplot(221)
 		plt.plot(np.add.reduce(np.add.reduce(resultscov, axis=1), axis=1), label="covariance")
-		plt.title("filtre de Kalman")
+		plt.title("filtre de Kalman order 1")
 		plt.subplot(212)
 		plt.plot(results[:,0], results[:,1], label="filtre de kalman", markersize=1)
 		plt.plot(measures[:,0], measures[:,1], "*", label="mesures", markersize=1)
@@ -161,15 +162,13 @@ if __name__ == '__main__':
 		dimz = 2
 		dimNoise = 2
 		dt = .1
+		alpha = 1.05
 		correlation = 5 # how fast you want to update model (big number is slow convergercence)
-		covariance = 5 # => how close to the measurement you want to be
+		covariance = 500 # => how close to the measurement you want to be
 		# noiseCovariance = 0.1  # => how do you trust your sensor
-		# noiseCovariance = np.diag([ dt**4/16, dt**3/9, dt**2/4, dt**1])
-		noiseCovariance = Q_discrete_white_noise(dim=2, dt=dt, var=0.01)
-		noiseCovariance = block_diag(q, q, q)
+		noiseCovariance = np.diag([ dt**6/36, dt**5/25,dt**4/16, dt**3/9, dt**2/4, dt**1])
 
-
-		x = np.array([0., 0., 0., 0.])
+		x = np.array([0., 0., 0., 0., 0., 0.])
 		measurementFunc = np.array([[1., 0., 0., 0., 0., 0.],
 									[0., 1., 0., 0., 0., 0.]])
 
@@ -180,11 +179,11 @@ if __name__ == '__main__':
 									[0., 0., 0., 0.,        1.,        0.],
 									[0., 0., 0., 0.,        0.,        1.]])
 
-		kf = kf_filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise)
+		kf = KF_Filter(dimx , dimz, x, covariance, stateTransition, measurementFunc, dt, noiseCovariance, correlation, dimNoise,alpha)
 
 		epoch = 500
-		results = np.empty([epoch, 4])
-		resultscov = np.empty([epoch, 4, 4])
+		results = np.empty([epoch, 6])
+		resultscov = np.empty([epoch, 6, 6])
 		measures = np.empty([epoch, 2])
 		positions = np.empty([epoch, 2])
 
@@ -211,7 +210,7 @@ if __name__ == '__main__':
 		plt.figure(1)
 		plt.subplot(221)
 		plt.plot(np.add.reduce(np.add.reduce(resultscov, axis=1), axis=1), label="covariance")
-		plt.title("filtre de Kalman")
+		plt.title("filtre de Kalman order 2")
 		plt.subplot(212)
 		plt.plot(results[:,0], results[:,1], label="filtre de kalman", markersize=1)
 		plt.plot(measures[:,0], measures[:,1], "*", label="mesures", markersize=1)
@@ -225,6 +224,6 @@ if __name__ == '__main__':
 
 
 		# real main
-	#dog()
+	# dog()
 	car()
 	plain()

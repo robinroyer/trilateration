@@ -1,15 +1,13 @@
+from __future__ import absolute_import
 
 import time
 import datetime
 import unittest
 
-from solver import solver
-
-from ..model.point import point
-
+from ..solver.solver import Solver
+from ..model.point import Point
+from ..filtering.statistic_filter import filter_point_distance, filter_uplink_timestamps, filter_uplink_distance
 from ..utils.mock import getPoint1Uplinks, getPoint2Uplinks, getPoint3Uplinks, getPoint4Uplinks, getPoint5Uplinks, measures
-
-from ..filter.statistic_filter import filter_point_distance, filter_uplink_timestamps, filter_uplink_distance
 
 
 
@@ -17,7 +15,7 @@ class Test_solver(unittest.TestCase):
 
     def test_solver(self):
         t = int(time.time() * 1000000000)
-        sol = solver(
+        sol = Solver(
             "lsm",
             ["result_distance", "gateway_distance"]
         )
@@ -39,7 +37,7 @@ class Test_solver(unittest.TestCase):
         localisation = measures[4]
         uplks = getPoint5Uplinks()
 
-        sol = solver(
+        sol = Solver(
             "tdoa",
             ["timestamp", "result_distance"]
         )
@@ -50,7 +48,7 @@ class Test_solver(unittest.TestCase):
             for i in xrange(4, len(uplk)):
                 a = sol.predict(uplk[i-4: i])
                 results.append(a)
-                # print "error: ", a.distance_from_point(point(localisation[0], localisation[1]))
+                # print "error: ", a.distance_from_point(Point(localisation[0], localisation[1]))
 
             results = filter_point_distance(results, 2)
             lat = 0
@@ -61,8 +59,8 @@ class Test_solver(unittest.TestCase):
                     lon += result.lon
                 lat /= len(results)
                 lon /= len(results)
-                all_results.append(point(lat, lon))
-            print "mean", point(lat, lon).distance_from_point(point(localisation[0], localisation[1]))
+                all_results.append(Point(lat, lon))
+            # print "mean", Point(lat, lon).distance_from_point(Point(localisation[0], localisation[1]))
 
         all_results = filter_point_distance(all_results, 2)
         lat = 0
@@ -72,8 +70,8 @@ class Test_solver(unittest.TestCase):
             lon += result.lon
         lat /= len(all_results)
         lon /= len(all_results)
-        all_results.append(point(lat, lon))
-        print "real result", point(lat, lon).distance_from_point(point(localisation[0], localisation[1]))
+        all_results.append(Point(lat, lon))
+        # print "real result", Point(lat, lon).distance_from_point(Point(localisation[0], localisation[1]))
 
         self.assertTrue(True)
 
