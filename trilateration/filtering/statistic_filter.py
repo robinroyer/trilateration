@@ -53,11 +53,11 @@ def filter_point_distance(points, m=2):
     if m < 0:
         m = 1
     data = np.empty([len(points), 2], dtype=object)
-    for i, Point in enumerate(points):
+    for i, point in enumerate(points):
         temp = 0
         for p in points:
-            temp += Point.distance_from_point(p)
-        data[i,0] = Point
+            temp += point.distance_from_point(p)
+        data[i,0] = point
         data[i,1] = temp
 
     mean = np.mean(data[:,1])
@@ -97,7 +97,6 @@ def filter_uplink_distance(uplinks, m=2):
     check_outliner = lambda p: abs(p[1] - mean) <= m * std
     bool_arr = np.array([check_outliner(row) for row in data])
     return data[bool_arr][:, 0].tolist()
-
 
 if __name__ == '__main__':
 

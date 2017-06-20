@@ -26,10 +26,10 @@ class MME_Filter(Filter):
 		std1 = np.sqrt(self.kf1.filter.R[0,0])
 		std2 = np.sqrt(self.kf1.filter.R[1,1])
 		if np.abs(self.kf1.filter.y[0]) < self.threshold * std1 and np.abs(self.kf1.filter.y[1]) < self.threshold * std2:
-			print "vitesse"
+			# print "vitesse"
 			return x1, cov1
 		else:
-			print "acceleration"
+			# print "acceleration"
 			return x2, cov2
 
 

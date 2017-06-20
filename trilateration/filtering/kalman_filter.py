@@ -3,8 +3,8 @@ from __future__ import absolute_import
 import numpy as np
 import matplotlib.pyplot as plt
 
-from filterpy import KalmanFilter
-from filterpy import Q_discrete_white_noise
+from filterpy.kalman.kalman_filter import KalmanFilter
+from filterpy.common.discretization import Q_discrete_white_noise
 
 from ..filtering.abstract_filter import Filter
 
