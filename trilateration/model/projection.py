@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 
 import pyproj
 
-class projection:
+class Projection:
     """Check if an object is float, int or long.
 
     Args:
@@ -16,11 +17,11 @@ class projection:
         """Check if an object is float, int or long.
 
         Args:
-            a_projection string reprentation fo the projection system
+            a_projection string reprentation fo the Projection system
             see http://spatialreference.org/ref/epsg/2192/
         """
         if not isinstance(a_projection, str):
-            raise ValueError("The projection parameter should be a string")
+            raise ValueError("The Projection parameter should be a string")
         self.projection = pyproj.Proj(init=a_projection)
 
     def lat_long_to_x_y(self, lat, lon):

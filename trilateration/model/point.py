@@ -1,10 +1,12 @@
+from __future__ import absolute_import
 
 import math
+import string
 
-from ..utils.utils import is_number, EARTH_RADIUS
+from ..utils.tools import is_number, EARTH_RADIUS
 
-class point(object):
-    """ Representation of a Latitude / Longitude point"""
+class Point(object):
+    """ Representation of a Latitude / Longitude Point"""
 
     def __init__(self, lat, lon):
         """Point constructor
@@ -14,9 +16,9 @@ class point(object):
             lon: The longitude vale.(-90 < lon < 90)
         """
         if not is_number(lon) or lon > 180 or lon < -180:
-            raise ValueError("Incorrect longitude")
+            raise ValueError("Incorrect longitude" + str(lon))
         if not is_number(lat) or lat > 90 or lat < -90:
-            raise ValueError("Incorrect latitude")
+            raise ValueError("Incorrect latitude : " + str(lat))
         self.lat = float(lat)
         self.lon = float(lon)
 
@@ -24,9 +26,13 @@ class point(object):
         """Overload __str__ for debug purpose"""
         return "Point ->\n\tlatitude: %f, longitude: %f" % (self.lat, self.lon)
 
+    def to_array(self):
+        """export to array"""
+        return [self.lat, self.lon]
+
     def distance_from_point(self, aPoint):
         """
-        Calculate the great circle distance between two points 
+        Calculate the great circle distance between two Points 
         on the earth (specified in decimal degrees)
 
         Args:
@@ -36,8 +42,8 @@ class point(object):
             great circle distance between the 2 circle center
         """
 
-        if not isinstance(aPoint, point):
-            raise ValueError("Parameter is not a point")
+        if not isinstance(aPoint, Point):
+            raise ValueError("Parameter is not a Point")
 
         # convert decimal degrees to radians
         lon1, lat1, lon2, lat2 = map(math.radians, [self.lon, self.lat, aPoint.lon, aPoint.lat])

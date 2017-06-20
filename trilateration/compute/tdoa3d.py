@@ -27,24 +27,24 @@ The aim of this lib is to compute the geolocalization of a device by the time di
 /_____\
 
 """
-class Tdoa:
-    """This class handle all the Tdoa process"""
+class Tdoa3d:
+    """This class handle all the Tdoa3d process"""
 
     def __init__(self, uplink_list, projection_system='epsg:2192'):
         """tdoa constructor
 
         Args:
-            uplink_list: a List of 4 Uplinks to consider to compute the Tdoa
-            Projection_system: The Projection system name to use. (string)
+            uplink_list: a List of 4 uplinks to consider to compute the Tdoa3d
+            projection_system: The Projection system name to use. (string)
                 please choose your Projection  http://spatialreference.org/ref/epsg/2192/
         """
-        if not isinstance(uplink_list, list) and not isinstance(uplink_list, np.ndarray) or len(uplink_list) != 4:
-            raise ValueError("Incorrect uplink_list is not a list of 4 items "+ str(type(uplink_list)) )
+        if not isinstance(uplink_list, list) and not isinstance(uplink_list, np.ndarray)  or len(uplink_list) != 4:
+            raise ValueError("Incorrect uplink_list is not a list"+ str(type(uplink_list)) )
         if not isinstance(projection_system, str):
-            raise ValueError("Incorrect Projection_system")
+            raise ValueError("Incorrect projection_system")
         for uplk in uplink_list:
             if not isinstance(uplk, Uplink):
-                raise ValueError("Invalid item in uplink_list is not a Uplink")
+                raise ValueError("Invalid item in uplink_list is not a uplink")
         #check Gateway uniqueness
         for i, uplk in enumerate(uplink_list):
             for j in xrange(i+1, len(uplink_list)):
@@ -87,31 +87,36 @@ class Tdoa:
                 Bm = (2 * Ym) / (v * Tm) - (2 * Y1) / (v * T1)
                 Dm = v * Tm - v * T1 - (Xm * Xm + Ym * Ym) / (v * Tm) + (X1 * X1 + Y1 * Y1) / (v * T1)
         """
-        x, y = Symbol('x'), Symbol('y')
+        x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 
         # Pivot values
         x0, y0 = self._proj.lat_long_to_x_y(self._uplinks[0].gateway.lat, self._uplinks[0].gateway.lon)
+        z0 = self._uplinks[0].gateway.altitude
         t0 = self._uplinks[0].timestamp
 
         # delta 1
         x1, y1 = self._proj.lat_long_to_x_y(self._uplinks[1].gateway.lat, self._uplinks[1].gateway.lon)
+        z1 = self._uplinks[1].gateway.altitude
         t1 = self._uplinks[1].timestamp
-        dx1, dy1, dt1 = x1 - x0, y1 - y0, t1 - t0
+        dx1, dy1, dz1, dt1 = x1 - x0, y1 - y0, z1 - z0, t1 - t0
 
         for i in xrange(2, len(self._uplinks)):
             # delta n
             gw_x, gw_y = self._proj.lat_long_to_x_y(self._uplinks[i].gateway.lat, self._uplinks[i].gateway.lon)
+            gw_z = self._uplinks[i].gateway.altitude
             gw_ts = self._uplinks[i].timestamp
-            dxn, dyn, dtn = gw_x - x0, gw_y - y0, gw_ts - t0
+            dxn, dyn, dzn, dtn = gw_x - x0, gw_y - y0, gw_z - z0, gw_ts - t0
 
             # algorithm explained previously
             A = (2 * dxn / SPEED_OF_LIGHT * dtn) - (2 * dx1 / SPEED_OF_LIGHT * dt1)
             B = (2 * dyn / SPEED_OF_LIGHT * dtn) - (2 * dy1 / SPEED_OF_LIGHT * dt1)
-            D = SPEED_OF_LIGHT * (dtn - dt1) - ((dxn**2 + dyn**2) / SPEED_OF_LIGHT * dtn) + ((dx1**2 + dy1**2) / SPEED_OF_LIGHT * dt1)
-            self._equations.append( A * x + B * y + D )
+            C = (2 * dzn / SPEED_OF_LIGHT * dtn) - (2 * dz1 / SPEED_OF_LIGHT * dt1)
+            D = SPEED_OF_LIGHT * (dtn - dt1) - ((dxn**2 + dyn**2 + dzn**2) / SPEED_OF_LIGHT * dtn) + ((dx1**2 + dy1**2 + dz1**2) / SPEED_OF_LIGHT * dt1)
+            self._equations.append( A * x + B * y + C * z + D )
 
-        solution = list(linsolve(self._equations, (x,y)))
+        solution = list(linsolve(self._equations, (x,y,z)))
         lon, lat = self._proj.x_y_to_long_lat(x0 + solution[0][0], y0 + solution[0][1])
+        alt = z0 + solution[0][2]
         self._intersections.append(Point(lat, lon))
 
 
@@ -148,6 +153,6 @@ if __name__ == '__main__':
     u3 = Uplink(g3, datetime.datetime.now(), t3)
     u4 = Uplink(g4, datetime.datetime.now(), t4)
 
-    solver = Tdoa([u1, u2, u3, u4])
+    solver = Tdoa3d([u1, u2, u3, u4])
     print solver.geolocalized_device
 

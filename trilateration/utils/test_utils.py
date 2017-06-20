@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 import unittest
 
 import time
 import datetime
-from utils import is_number
+from ..utils.tools import is_number
 # do not forget to use nose2 at root to run test
 
  

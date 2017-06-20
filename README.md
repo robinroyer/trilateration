@@ -14,3 +14,6 @@ les filtres que l'on doit effectuer:
 - faire un filtrage statistique sur les resulats en sortie (premutation + analyse statistique des resultats)
 
 -> filtre distance et filtre distance 
+
+
+python -m trilateration.filtering.adaptive_filtering
